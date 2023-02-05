@@ -15,5 +15,6 @@
 
 ## Usage
 1. Go to your telegram bot and talk what you want.
+2. Bot have 3 Menu buttons. `Writer` mode using `text-davinci-003` model. `Coder` mode using `code-davinci-002` model. `New chat` button remove previous talk context.
 
 Have a fun <3
