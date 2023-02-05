@@ -1,4 +1,3 @@
 openai>=0.26.0
-telebot>=0.0.4
 pyTelegramBotAPI>=4.10.0
 python-dotenv>=0.21.1
