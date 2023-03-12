@@ -39,7 +39,19 @@ def get_answer(message):
       message_history = []
 
     last_prompt_time = time.time()
-    bot.send_message(chat_id=message.from_user.id, text=response.choices[0].message.content)
+
+# If answer is too long divide it in small pieces
+    if len(response.choices[0].message.content) > 3999:
+      long_answer = response.choices[0].message.content
+      pieces = []
+      for i in range(0, len(long_answer), 3999):
+        piece = long_answer[i:i+3999]
+        pieces.append(piece)
+      for piece in pieces:
+        bot.send_message(chat_id=message.from_user.id, text=piece)
+    else:
+      bot.send_message(chat_id=message.from_user.id, text=response.choices[0].message.content)
+
     print('>>> ', message_history)
 
 while True:
