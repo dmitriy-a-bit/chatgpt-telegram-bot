@@ -8,60 +8,39 @@ load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 bot = telebot.TeleBot(os.environ.get("TELEGRAM_API_KEY"))
 lose_context_after = 600   # Lose context after 600 sec
-context = ''
+message_history = []
 last_prompt_time = 0
-chat_mode = ''
-engine = "text-davinci-003"
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     keyboard = telebot.types.ReplyKeyboardMarkup(is_persistent=True, resize_keyboard=True, one_time_keyboard=False)
-    keyboard.add('Writer', 'Coder', 'New Chat')
+    keyboard.add('New Chat')
     bot.send_message(message.chat.id, "I'm OpenAI ChatGPT bot.", reply_markup=keyboard)
 
 @bot.message_handler(content_types=['text'])  # To get text messages from users
 def get_answer(message):
-    global context
+    global message_history
     global last_prompt_time
     global lose_context_after
-    global chat_mode
-    global engine
 
-    if message.text == "Writer":
-      chat_mode = "Writer"
-
-    if message.text == "Coder":
-      chat_mode = "Coder"
-
-    if message.text == "Writer" or message.text == "Coder" or message.text == "New Chat":
-      context = ''
+    if message.text == "New Chat":
+      message_history = []
       return
 
-    if chat_mode == "Writer":
-      engine = "text-davinci-003"
-
-    if chat_mode == "Coder":
-      engine = "code-davinci-002"
-
-    response = openai.Completion.create(
-            engine=engine,
-            prompt=f"{context}Q: {message.text} ->",
-            temperature=0.5,
-            max_tokens=1000,
-            top_p=1.0,
-            frequency_penalty=0.5,
-            presence_penalty=0.0,
-            stop="###",
-        )
+    message_history.append({"role": "user", "content": f"{message.text}"})
+    response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=message_history
+    )
+    reply_content = response.choices[0].message.content
+    message_history.append({"role": "assistant", "content": f"{reply_content}"})
 
     if time.time() - last_prompt_time > lose_context_after:
-      context = ''
+      message_history = []
 
-    context += message.text + ', '
     last_prompt_time = time.time()
-    bot.send_message(chat_id=message.from_user.id, text=response['choices'][0]['text'])
-    print(response)
-    print('>>> ' + context)
+    bot.send_message(chat_id=message.from_user.id, text=response.choices[0].message.content)
+    print('>>> ', message_history)
 
 while True:
     try:
